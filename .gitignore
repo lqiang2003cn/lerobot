@@ -28,8 +28,8 @@ outputs
 .DS_Store
 
 # VS Code
-.vscode
-.devcontainer
+#.vscode
+#.devcontainer
 
 # HPC
 nautilus/*.yaml
