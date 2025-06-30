@@ -333,15 +333,41 @@ class LeKiwi(Robot):
         # Read actuators position for arm and vel for base
         start = time.perf_counter()
         arm_pos = self.bus.sync_read("Present_Position", self.arm_motors)
+        # arm
+        # "arm_shoulder_pan": Motor(1, "sts3215", norm_mode_body),
+        # "arm_shoulder_lift": Motor(2, "sts3215", norm_mode_body),
+        # "arm_elbow_flex": Motor(3, "sts3215", norm_mode_body),
+        # "arm_wrist_flex": Motor(4, "sts3215", norm_mode_body),
+        # "arm_wrist_roll": Motor(5, "sts3215", norm_mode_body),
+        # "arm_gripper": Motor(6, "sts3215", MotorNormMode.RANGE_0_100),
+
         base_wheel_vel = self.bus.sync_read("Present_Velocity", self.base_motors)
+        # base
+        # "base_left_wheel": Motor(7, "sts3215", MotorNormMode.RANGE_M100_100),
+        # "base_back_wheel": Motor(8, "sts3215", MotorNormMode.RANGE_M100_100),
+        # "base_right_wheel": Motor(9, "sts3215", MotorNormMode.RANGE_M100_100),
 
         base_vel = self._wheel_raw_to_body(
             base_wheel_vel["base_left_wheel"],
             base_wheel_vel["base_back_wheel"],
             base_wheel_vel["base_right_wheel"],
         )
+        # {
+        #     "x.vel": x,
+        #     "y.vel": y,
+        #     "theta.vel": theta,
+        # }
+
 
         arm_state = {f"{k}.pos": v for k, v in arm_pos.items()}
+        # {
+            # "arm_shoulder_pan.pos": 1
+            # "arm_shoulder_lift.pos": 2
+            # "arm_elbow_flex.pos": 3
+            # "arm_wrist_flex.pos": 4
+            # "arm_wrist_roll.pos": 5
+            # "arm_gripper.pos": 6
+        # }
 
         obs_dict = {**arm_state, **base_vel}
 
@@ -356,6 +382,19 @@ class LeKiwi(Robot):
             logger.debug(f"{self} read {cam_key}: {dt_ms:.1f}ms")
 
         return obs_dict
+        # {
+        #     "arm_shoulder_pan.pos": 1
+        #     "arm_shoulder_lift.pos": 2
+        #     "arm_elbow_flex.pos": 3
+        #     "arm_wrist_flex.pos": 4
+        #     "arm_wrist_roll.pos": 5
+        #     "arm_gripper.pos": 6
+        #     "x.vel": x,
+        #     "y.vel": y,
+        #     "theta.vel": theta,
+        #     "front": np.array(h,w,3)
+        #     "wrist": np.array(h,w,3)
+        # }
 
     def send_action(self, action: dict[str, Any]) -> dict[str, Any]:
         """Command lekiwi to move to a target joint configuration.

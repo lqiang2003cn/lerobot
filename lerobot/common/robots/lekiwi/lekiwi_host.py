@@ -88,7 +88,21 @@ def main():
                 watchdog_active = True
                 robot.stop_base()
 
+            # get observation from robot
             last_observation = robot.get_observation()
+            # {
+            #     "arm_shoulder_pan.pos": 1
+            #     "arm_shoulder_lift.pos": 2
+            #     "arm_elbow_flex.pos": 3
+            #     "arm_wrist_flex.pos": 4
+            #     "arm_wrist_roll.pos": 5
+            #     "arm_gripper.pos": 6
+            #     "x.vel": x,
+            #     "y.vel": y,
+            #     "theta.vel": theta,
+            #     "front": np.array(h,w,3)
+            #     "wrist": np.array(h,w,3)
+            # }
 
             # Encode ndarrays to base64 strings
             for cam_key, _ in robot.cameras.items():

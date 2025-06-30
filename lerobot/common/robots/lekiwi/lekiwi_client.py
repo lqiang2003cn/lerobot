@@ -77,7 +77,7 @@ class LeKiwiClient(Robot):
                 "arm_shoulder_lift.pos",
                 "arm_elbow_flex.pos",
                 "arm_wrist_flex.pos",
-                "arm_wrist_roll.pos",
+                "arm_wrist_roll.pos", 
                 "arm_gripper.pos",
                 "x.vel",
                 "y.vel",
@@ -215,6 +215,13 @@ class LeKiwiClient(Robot):
                 current_frames[cam_name] = frame
 
         return current_frames, {"observation.state": state_vec}
+        # current_frames = {
+        #     "observation.images.front":np.array(h,w),
+        #     "observation.images.wrist":np.array(h,w),
+        # }
+        # observation.state = {
+        #     np.array(9) # 9 states 
+        # }
 
     def _get_data(self) -> Tuple[Dict[str, np.ndarray], Dict[str, Any], Dict[str, Any]]:
         """
@@ -261,6 +268,13 @@ class LeKiwiClient(Robot):
             raise DeviceNotConnectedError("LeKiwiClient is not connected. You need to run `robot.connect()`.")
 
         frames, obs_dict = self._get_data()
+        # frames = {
+        #     "observation.images.front":np.array(h,w),
+        #     "observation.images.wrist":np.array(h,w),
+        # }
+        # obs_dict = {
+        #   observation.state : np.array(9)
+        # }
 
         # Loop over each configured camera
         for cam_name, frame in frames.items():
@@ -270,6 +284,12 @@ class LeKiwiClient(Robot):
             obs_dict[cam_name] = torch.from_numpy(frame)
 
         return obs_dict
+        # obs_dict = {
+        #   "observation.state" : np.array(9),
+        #   "observation.images.front":np.array(h,w,3),  # maybe np.array(3,h,w)?
+        #   "observation.images.wrist":np.array(h,w,3)
+        # }
+
 
     def _from_keyboard_to_base_action(self, pressed_keys: np.ndarray):
         # Speed control

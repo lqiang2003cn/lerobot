@@ -16,24 +16,24 @@ keyboard_config = KeyboardTeleopConfig()
 keyboard = KeyboardTeleop(keyboard_config)
 
 robot_config = LeKiwiClientConfig(remote_ip="172.18.134.136", id="lekiwi")
-robot = LeKiwiClient(robot_config)
+lekiwi_client = LeKiwiClient(robot_config)
 
-action_features = hw_to_dataset_features(robot.action_features, "action")
-obs_features = hw_to_dataset_features(robot.observation_features, "observation")
+action_features = hw_to_dataset_features(lekiwi_client.action_features, "action")
+obs_features = hw_to_dataset_features(lekiwi_client.observation_features, "observation")
 dataset_features = {**action_features, **obs_features}
 
 dataset = LeRobotDataset.create(
     repo_id="pepijn223/lekiwi" + str(int(time.time())),
     fps=10,
     features=dataset_features,
-    robot_type=robot.name,
+    robot_type=lekiwi_client.name,
 )
 
 leader_arm.connect()
 keyboard.connect()
-robot.connect()
+lekiwi_client.connect()
 
-if not robot.is_connected or not leader_arm.is_connected or not keyboard.is_connected:
+if not lekiwi_client.is_connected or not leader_arm.is_connected or not keyboard.is_connected:
     exit()
 
 print("Starting LeKiwi recording")
@@ -44,21 +44,60 @@ while i < NB_CYCLES_CLIENT_CONNECTION:
 
     keyboard_keys = keyboard.get_action()
 
-    base_action = robot._from_keyboard_to_base_action(keyboard_keys)
+    base_action = lekiwi_client._from_keyboard_to_base_action(keyboard_keys)
 
     action = {**arm_action, **base_action} if len(base_action) > 0 else arm_action
 
-    action_sent = robot.send_action(action)
-    observation = robot.get_observation()
+    action_sent = lekiwi_client.send_action(action)
+    # action_sent is formatted as:
+    # {
+    #     "action":{
+    #         "arm_shoulder_pan.pos":1,
+    #         "arm_shoulder_lift.pos":2,
+    #         "arm_elbow_flex.pos":2,
+    #         "arm_wrist_flex.pos":2,
+    #         "arm_wrist_roll.pos":2,
+    #         "arm_gripper.pos":2,
+    #         "x.vel":2,
+    #         "y.vel":2,
+    #         "theta.vel":2,
+    #     }
+    # }
+
+    # the client pull messages from the zmq socket
+    observation = lekiwi_client.get_observation()
+    # observation = {
+        #   "observation.state" : np.array(9),
+        #   "observation.images.front":np.array(h,w,3),  # maybe np.array(3,h,w)?
+        #   "observation.images.wrist":np.array(h,w,3)
+    # }
 
     frame = {**action_sent, **observation}
+    # frame = {
+    #     "action":{
+    #         "arm_shoulder_pan.pos":1,
+    #         "arm_shoulder_lift.pos":2,
+    #         "arm_elbow_flex.pos":2,
+    #         "arm_wrist_flex.pos":2,
+    #         "arm_wrist_roll.pos":2,
+    #         "arm_gripper.pos":2,
+    #         "x.vel":2,
+    #         "y.vel":2,
+    #         "theta.vel":2,
+    #     },
+    #     "observation.state" : np.array(9),
+    #     "observation.images.front":torch.array(h,w,3),  # maybe np.array(3,h,w)?
+    #     "observation.images.wrist":torch.array(h,w,3)
+    # }
+
+
     task = "Dummy Example Task Dataset"
 
     dataset.add_frame(frame, task)
     i += 1
 
 print("Disconnecting Teleop Devices and LeKiwi Client")
-robot.disconnect()
+lekiwi_client.disconnect()
 leader_arm.disconnect()
 keyboard.disconnect()
 
