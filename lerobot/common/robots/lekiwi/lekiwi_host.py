@@ -123,6 +123,7 @@ def main():
             # Ensure a short sleep to avoid overloading the CPU.
             elapsed = time.time() - loop_start_time
 
+            # how much has used by us? if we were quick, 1 / host.max_loop_freq_hz - elapsed is the time left for this loop, so sleep
             time.sleep(max(1 / host.max_loop_freq_hz - elapsed, 0))
             duration = time.perf_counter() - start
         print("Cycle time reached.")
